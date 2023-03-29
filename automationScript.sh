@@ -149,15 +149,15 @@ function arrayInput () {
 #  Adds time stamp to every output line
 # Usage: script | addTimeStamp
 function addTimeStamp() {
-	while IFS = read -r line;
+	while read -r line;
 	do
-		printf '%s %s %s\n' "$(date)" "\[LOG\]" "$line"
+		printf '%s %s %s\n' "$(date +"%Y-%m-%d %T")" "\[LOG\]" "$line"
 	done
 }
 
 # -------------------- CALL --------------------
 if (( $LOG_SWITCH == 1 )); then
-    exec > >(tee -a ${LOG_PATH})
+    exec &> >(addTimeStamp | tee -a ${LOG_PATH})
 fi
 {
 # Load in the source configurations
@@ -165,6 +165,5 @@ fi
 # Execution of compiled script
 
 # show the current time when we run the script
-echo $(date)
 checkError ${PART_CHECK[@]}
 }

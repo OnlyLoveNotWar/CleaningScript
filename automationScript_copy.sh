@@ -26,6 +26,24 @@ arrayInput() {
 }
 
 
+
+# Enable or disable logging (1 = enabled, 0 = disabled)
+LOGGING=1
+
+# Path to the log file
+LOG_FILE="my_script.log"
+
+# Define logging function
+log() {
+  # Check if logging is enabled
+  if [ $LOGGING -eq 1 ]
+  then
+    # Log the message to the log file
+    echo "$(date +"%Y-%m-%d %H:%M:%S"): $1" >> $LOG_FILE
+  fi
+}
+
+
 # -------------------- VARIABLES --------------------
 
 # Array=(0'partition' 1'percent' 2'arrays')

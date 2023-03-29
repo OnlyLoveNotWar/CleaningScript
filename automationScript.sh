@@ -160,7 +160,7 @@ function addTimeStamp() {
 
 # Log all output
 # Usage: LogOutput ${array[@]}
-log() {
+function log() {
   # Check if logging is enabled - on-off switch
   if [ $LOGGING -eq 1 ]
   then

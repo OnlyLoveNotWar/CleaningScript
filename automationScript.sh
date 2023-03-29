@@ -23,7 +23,7 @@ arrayInput() {
         # Print the output of each function
         echo "$func output: $output"
     done
-}
+} 
 
 
 # -------------------- VARIABLES --------------------
@@ -139,6 +139,22 @@ function checkError () {
 			fi
 		done
 	fi
+}
+
+# Executes the find command with an array of arguments
+# Usage: finArrayArgs ${array[@]}
+function findArrayArgs () {
+	if [[ $# -ne 0 ]]; then
+		argsArray = ($@)
+		find "${argsArray[@]}"
+	fi
+} 
+ 
+function addLogDate() {
+	while IFS = read -r line;
+	do
+		printf '%s %s %s\n' "$(date)" "\[LOG\]" "$line"
+	done
 }
 
 # -------------------- CALL --------------------

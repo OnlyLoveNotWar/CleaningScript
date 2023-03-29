@@ -151,7 +151,7 @@ function arrayInput () {
 function addTimeStamp() {
 	while read -r line;
 	do
-		printf '%s %s %s\n' "$(date +"%Y-%m-%d %T")" "\[LOG\]" "$line"
+		printf '%s %s %s\n' "$(date +"%Y-%m-%d %T")" "[LOG]:" "$line"
 	done
 }
 

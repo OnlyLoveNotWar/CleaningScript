@@ -26,8 +26,6 @@ arrayInput() {
     done
 } 
 
-# Log switch
-log_switch = 1
 
 # -------------------- FUNCTIONS --------------------
 
@@ -119,7 +117,7 @@ function checkError () {
 # Usage: finArrayArgs ${array[@]}
 function findArrayArgs () {
 	if [[ $# -ne 0 ]]; then
-		args = ("$@")
+		args=("$@")
 		find "${args[@]}"
 		# Alternatively:
 		# cmdstr = "find"
@@ -135,12 +133,12 @@ function findArrayArgs () {
 # Usage: moveInBatch ${array[@]}
 function arrayInput () {
     # Iterate over the input array
-	output = $1
-	funcArray = ("$@")
+	output=$1
+	funcArray=("$@")
     for func in "${funcArray[@]}"
     do
         # Execute each function and store the output in a variable
-		cmdstr = "eval $func $output"
+		cmdstr="eval $func $output"
         out=$(eval "$func \"$1\"")
         # Print the output of each function
         echo "$func output: $output"
@@ -158,8 +156,15 @@ function addTimeStamp() {
 }
 
 # -------------------- CALL --------------------
-
+if (( $LOG_SWITCH == 1 )); then
+    exec > >(tee -a ${LOG_PATH})
+fi
+{
 # Load in the source configurations
 # include ./automationSource.sh
 # Execution of compiled script
+
+# show the current time when we run the script
+echo $(date)
 checkError ${PART_CHECK[@]}
+}

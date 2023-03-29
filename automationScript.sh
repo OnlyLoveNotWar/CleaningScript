@@ -10,7 +10,8 @@
 # - Variables should be in configuration file, instead of inline
 # - Add function to execute "find" function with array inputted parameters, eg.: PART_ZTE_REMOVE_DATE=('/source/path' '-mtime +2')
 
-
+# Load the config file from the current directory
+source ./cleanScriptCFG.cfg
 
 # Create unique function which is using array input which can be called.
 # Usage: moveInBatch ${array[@]}
@@ -24,36 +25,6 @@ arrayInput() {
         echo "$func output: $output"
     done
 } 
-
-
-# -------------------- VARIABLES --------------------
-
-# Array=(0'partition' 1'percent' 2'arrays')
-# Desc.: Partitions to clear
-PART_CHECK=(
-	'/ztesoft' '80' 'PART_ZTE'
-)
-
-# Array=(n'arrays')
-# Desc.: Array of cleaning scripts that needs to run on specific partitions
-PART_ZTE=(
-	'PART_ZTE_COMPRESS'
-	'PART_ZTE_REMOVE_DATE'
-)
-
-# Array=(0"source" 1"backup" 2"gz" 3"retention")
-# Cleaning scripts
-PART_ZTE_COMPRESS=('/source/path' '/path/to/backup' '/path/to/gz' '+2')
-PART_ZTE_REMOVE_DATE=('/source/path' '+2')
-
-# File task limit
-LIMIT=1000
-
-# Current date
-SDATE=$(date +'%Y%m%d%H%M')
-
-# Path of Log file
-LOG_PATH=''
 
 # -------------------- FUNCTIONS --------------------
 

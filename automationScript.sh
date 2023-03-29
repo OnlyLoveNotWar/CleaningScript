@@ -26,6 +26,9 @@ arrayInput() {
     done
 } 
 
+# Log switch
+log_switch = 1
+
 # -------------------- FUNCTIONS --------------------
 
 # Check if source file exists
@@ -116,12 +119,38 @@ function checkError () {
 # Usage: finArrayArgs ${array[@]}
 function findArrayArgs () {
 	if [[ $# -ne 0 ]]; then
-		argsArray = ($@)
-		find "${argsArray[@]}"
+		args = ("$@")
+		find "${args[@]}"
+		# Alternatively:
+		# cmdstr = "find"
+		# for arg in "${args[@]}"
+		# do
+		# 	cmdstr += " $arg"
+		# done
+		# eval $cmdstr
 	fi
+}
+
+# Create unique function which is using array input which can be called.
+# Usage: moveInBatch ${array[@]}
+function arrayInput () {
+    # Iterate over the input array
+	output = $1
+	funcArray = ("$@")
+    for func in "${funcArray[@]}"
+    do
+        # Execute each function and store the output in a variable
+		cmdstr = "eval $func $output"
+        out=$(eval "$func \"$1\"")
+        # Print the output of each function
+        echo "$func output: $output"
+    done
 } 
+
  
-function addLogDate() {
+#  Adds time stamp to every output line
+# Usage: script | addTimeStamp
+function addTimeStamp() {
 	while IFS = read -r line;
 	do
 		printf '%s %s %s\n' "$(date)" "\[LOG\]" "$line"

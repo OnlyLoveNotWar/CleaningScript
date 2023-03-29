@@ -148,13 +148,25 @@ function arrayInput () {
 } 
 
  
-#  Adds time stamp to every output line
+# Adds time stamp to every output line
 # Usage: script | addTimeStamp
 function addTimeStamp() {
 	while IFS = read -r line;
 	do
 		printf '%s %s %s\n' "$(date)" "\[LOG\]" "$line"
 	done
+}
+
+
+# Log all output
+# Usage: LogOutput ${array[@]}
+log() {
+  # Check if logging is enabled - on-off switch
+  if [ $LOGGING -eq 1 ]
+  then
+    # Log the message to the log file
+    echo "$(date +"%Y-%m-%d %H:%M:%S"): $1" >> $LOG_PATH
+  fi
 }
 
 # -------------------- CALL --------------------

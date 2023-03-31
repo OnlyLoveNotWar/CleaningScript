@@ -155,21 +155,6 @@ function addTimeStamp() {
 	done
 }
 
-<<<<<<< HEAD
-
-# Log all output
-# Usage: LogOutput ${array[@]}
-function log() {
-  # Check if logging is enabled - on-off switch
-  if [ $LOGGING -eq 1 ]
-  then
-    # Log the message to the log file
-    echo "$(date +"%Y-%m-%d %H:%M:%S"): $1" >> $LOG_PATH
-  fi
-}
-
-=======
->>>>>>> 85d0b7349e0dbf8876a3336954eeb028ee3de3ce
 # -------------------- CALL --------------------
 if (( $LOG_SWITCH == 1 )); then
     exec > >(tee -a ${LOG_PATH})

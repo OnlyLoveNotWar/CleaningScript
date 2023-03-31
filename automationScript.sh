@@ -13,21 +13,22 @@
 # Load the config file from the current directory
 source ./cleanScriptCFG.cfg
 
-# Create unique function which is using array input which can be called.
-# Usage: moveInBatch ${array[@]}
-arrayInput() {
-    # Iterate over the input array
-    for func in "$@"
-    do
-        # Execute each function and store the output in a variable
-        output=$(eval "$func \"$1\"")
-        # Print the output of each function
-        echo "$func output: $output"
-    done
-} 
-
-
 # -------------------- FUNCTIONS --------------------
+# The runFunArgArray function will trans the array to cmd(string) and run it with eval
+# Usage: runFunArgArray "${FUN_ARG_LIST[@]}"
+function runFunArgArray () {
+	local my_array=("$@")  
+	local len=${#my_array[@]}
+	local halfLen=$(( len / 2 ))
+		echo "There are ${halfLen} functions to run:"
+		for ((ind=0; ind<halfLen; ind++)); do
+			fun_temp=${my_array[$ind]}
+			arg_temp=${my_array[$(( ind + halfLen ))]}
+			echo "Executing function $(( ind + 1 )): ${fun_temp} with arguments: ${arg_temp}"
+			cmd="${fun_temp} ${arg_temp}"
+			eval $cmd
+		done
+}
 
 # Check if source file exists
 # Usage: include $_PATH
@@ -40,9 +41,9 @@ include () {
 function createPath () {
 	if [[ $# -ne 0 ]]; then
 		createPathArray=($@)
-		if [[ ! -d ${createPathArray[1]}/${SDATE} || ! -d ${createPathArray[2]}/${SDATE} ]]; then
+		if [[ ! -d ${createPathArray[0]}/${SDATE} || ! -d ${createPathArray[1]}/${SDATE} ]]; then
+			mkdir -p ${createPathArray[0]}/${SDATE}
 			mkdir -p ${createPathArray[1]}/${SDATE}
-			mkdir -p ${createPathArray[2]}/${SDATE}
 		fi
 	fi
 }
@@ -149,15 +150,15 @@ function arrayInput () {
 #  Adds time stamp to every output line
 # Usage: script | addTimeStamp
 function addTimeStamp() {
-	while IFS = read -r line;
+	while read -r line;
 	do
-		printf '%s %s %s\n' "$(date)" "\[LOG\]" "$line"
+		printf '%s %s %s\n' "$(date +"%Y-%m-%d %T")" "[LOG]:" "$line"
 	done
 }
 
 # -------------------- CALL --------------------
 if (( $LOG_SWITCH == 1 )); then
-    exec > >(tee -a ${LOG_PATH})
+    exec &> >(addTimeStamp | tee -a ${LOG_PATH})
 fi
 {
 # Load in the source configurations
@@ -165,6 +166,6 @@ fi
 # Execution of compiled script
 
 # show the current time when we run the script
-echo $(date)
-checkError ${PART_CHECK[@]}
+
+runFunArgArray "${FUN_ARG_LIST[@]}"
 }

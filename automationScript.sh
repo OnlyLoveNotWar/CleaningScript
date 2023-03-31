@@ -25,7 +25,7 @@ function runFunArgArray () {
 			fun_temp=${my_array[$ind]}
 			arg_temp=${my_array[$(( ind + halfLen ))]}
 			echo "Executing function $(( ind + 1 )): ${fun_temp} with arguments: ${arg_temp}"
-			cmd="${fun_temp} ${arg_temp}"
+			cmd="${fun_temp} \"${arg_temp}\""
 			eval $cmd
 		done
 }
@@ -118,15 +118,14 @@ function checkError () {
 # Usage: finArrayArgs ${array[@]}
 function findArrayArgs () {
 	if [[ $# -ne 0 ]]; then
-		args=("$@")
-		find "${args[@]}"
-		# Alternatively:
-		# cmdstr = "find"
-		# for arg in "${args[@]}"
-		# do
-		# 	cmdstr += " $arg"
-		# done
-		# eval $cmdstr
+		local array=("$@")
+		local len=${#array[@]}
+		for (( indA=0; indA < $len; indA+=2 )); do
+			local path="${array[$indA]}"
+			local opt="${array[$(( indA + 1 ))]}"
+			cmd="find ${path} ${opt}"
+			eval $cmd
+		done
 	fi
 }
 
@@ -168,4 +167,5 @@ fi
 # show the current time when we run the script
 
 runFunArgArray "${FUN_ARG_LIST[@]}"
+
 }

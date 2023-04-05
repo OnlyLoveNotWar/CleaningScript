@@ -41,9 +41,11 @@ include () {
 function createPath () {
 	if [[ $# -ne 0 ]]; then
 		createPathArray=($@)
-		if [[ ! -d ${createPathArray[0]}/${SDATE} || ! -d ${createPathArray[1]}/${SDATE} ]]; then
-			mkdir -p ${createPathArray[0]}/${SDATE}
+		if [[ ! -d ${createPathArray[1]}/${SDATE} || ! -d ${createPathArray[2]}/${SDATE} ]]; then
 			mkdir -p ${createPathArray[1]}/${SDATE}
+			mkdir -p ${createPathArray[2]}/${SDATE}
+			echo " createPath (): created ${createPathArray[1]}/${SDATE} "
+			echo " createPath (): created ${createPathArray[2]}/${SDATE} "
 		fi
 	fi
 }
@@ -58,7 +60,7 @@ function checkPath () {
 		echo 1
 	fi
 }
-
+#
 # Move files to backup directory
 # Usage: moveInBatch ${array[@]}
 function moveInBatch () {
@@ -66,9 +68,14 @@ function moveInBatch () {
 		moveInBatchArray=($@)
 		createPath ${moveInBatchArray[@]}
 		if [[ $(checkPath ${moveInBatchArray[0]}) -ne 0 ]]; then
-			if [[ $( find ${moveInBatchArray[0]} -maxdepth 1 -type f -mtime ${moveInBatchArray[3]} -exec ls -lrt {} \; | wc -l ) -ne 0 ]]; then
-				find ${moveInBatchArray[0]} -maxdepth 1 -type f -mtime ${moveInBatchArray[3]} -exec mv -t ${moveInBatchArray[1]}/${SDATE} {} +
+			if [[ $( find ${moveInBatchArray[0]} -maxdepth 1 -type f -exec ls -lrt {} \; | wc -l ) -ne 0 ]]; then
+				find ${moveInBatchArray[0]} -maxdepth 1 -type f -exec mv -t ${moveInBatchArray[1]}/${SDATE} {} +
+				echo "moveInBatch (): move files from ${moveInBatchArray[0]} to ${moveInBatchArray[1]}/${SDATE}"
+			else
+				echo "moveInBatch (): no file to move in ${moveInBatchArray[0]}"
 			fi
+		else
+			echo "moveInBatch (): can not find ${moveInBatchArray[0]}"
 		fi
 	fi
 }
@@ -79,11 +86,30 @@ function compressInBatch () {
 	if [[ $# -ne 0 ]]; then
 		ITER=0
 		compressInBatchArray=($@)
-		if [[ $( find ${compressInBatchArray[1]} -maxdepth 2 -type f -mtime ${compressInBatchArray[3]} -exec ls -lrt {} \; | wc -l ) -ne 0 ]]; then
-			while [ $( find ${compressInBatchArray[1]} -maxdepth 2 -type f -mtime ${compressInBatchArray[3]} -printf '%h/%f\n' | wc -l ) -ne 0 ]; do
-				find ${compressInBatchArray[1]} -maxdepth 2 -type f -mtime ${compressInBatchArray[3]} -printf '%h/%f\n' | head -n ${LIMIT} | tar --remove-files -czvf ${compressInBatchArray[2]}/tar_${SDATE}_${ITER}.tar.gz -T -
+		if [[ $( find ${compressInBatchArray[1]} -maxdepth 2 -type f -mmin ${compressInBatchArray[3]} -exec ls -lrt {} \; | wc -l ) -ne 0 ]]; then
+			while [ $( find ${compressInBatchArray[1]} -maxdepth 2 -type f -mmin ${compressInBatchArray[3]} -printf '%h/%f\n' | wc -l ) -ne 0 ]; do
+				find ${compressInBatchArray[1]} -maxdepth 2 -type f -mmin ${compressInBatchArray[3]} -printf '%h/%f\n' | head -n ${LIMIT} | tar --remove-files -czvf ${compressInBatchArray[2]}/${SDATE}/tar_${SDATE}_${ITER}.tar.gz -T -
 				ITER=$((ITER+1))
+				
 			done
+			echo "compressInBatch (): compress files which are older than ${compressInBatchArray[3]} mins from ${compressInBatchArray[1]} to ${compressInBatchArray[2]}/${SDATE}"
+		else
+			echo "compressInBatch (): no file is older than ${compressInBatchArray[3]} mins from ${compressInBatchArray[1]}"
+		fi
+	fi
+}
+# Remove files that are older than certain time
+# Usage: removeInBatch ${array[@]}
+function removeInBatch () {
+	if [[ $# -ne 0 ]]; then
+		removeBatchArray=($@)
+		if [[ $( find ${removeBatchArray[0]} -maxdepth 2 -type f -mmin ${removeBatchArray[1]} -exec ls -lrt {} \; | wc -l ) -ne 0 ]]; then
+			while [ $( find ${removeBatchArray[0]} -maxdepth 2 -type f -mmin ${removeBatchArray[1]} -printf '%h/%f\n' | wc -l ) -ne 0 ]; do
+				find ${removeBatchArray[0]} -maxdepth 2 -type f -mmin ${removeBatchArray[1]} -printf '%h/%f\n' | head -n ${LIMIT} | xargs rm
+			done
+			echo "removeInBatch (): remove files which are older than ${removeBatchArray[1]} mins from ${removeBatchArray[0]}"
+		else
+			echo "removeInBatch (): no file is older than ${removeBatchArray[1]} mins from ${removeBatchArray[0]}"
 		fi
 	fi
 }
@@ -99,10 +125,15 @@ function checkError () {
 					eval tmparr=\( \${${checkErrorArray[${i+2}]}[@]} \)
 					for j in ${tmparr[@]}; do
 						eval clearArr=\( \${${j}[@]} \)
-						moveInBatch ${clearArr[@]}
-						if [[ $(checkPath ${clearArr[1]}) -ne 0 && $(checkPath ${clearArr[2]}) -ne 0 ]]; then
-							compressInBatch ${clearArr[@]}
+						if [[ ${#clearArr[@]} -ne 2 ]]; then
+							moveInBatch ${clearArr[@]}
+							if [[ $(checkPath ${clearArr[1]}) -ne 0 && $(checkPath ${clearArr[2]}) -ne 0 ]]; then
+								compressInBatch ${clearArr[@]}
+							fi
+						else
+							removeInBatch ${clearArr[@]}
 						fi
+
 					done
 				fi
 			fi
@@ -130,7 +161,7 @@ function findArrayArgs () {
 }
 
 # Create unique function which is using array input which can be called.
-# Usage: moveInBatch ${array[@]}
+# Usage: arrayInput ${array[@]}
 function arrayInput () {
     # Iterate over the input array
 	output=$1

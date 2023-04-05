@@ -44,6 +44,8 @@ function createPath () {
 		if [[ ! -d ${createPathArray[1]}/${SDATE} || ! -d ${createPathArray[2]}/${SDATE} ]]; then
 			mkdir -p ${createPathArray[1]}/${SDATE}
 			mkdir -p ${createPathArray[2]}/${SDATE}
+			echo " createPath (): created ${createPathArray[1]}/${SDATE} "
+			echo " createPath (): created ${createPathArray[2]}/${SDATE} "
 		fi
 	fi
 }
@@ -68,7 +70,12 @@ function moveInBatch () {
 		if [[ $(checkPath ${moveInBatchArray[0]}) -ne 0 ]]; then
 			if [[ $( find ${moveInBatchArray[0]} -maxdepth 1 -type f -exec ls -lrt {} \; | wc -l ) -ne 0 ]]; then
 				find ${moveInBatchArray[0]} -maxdepth 1 -type f -exec mv -t ${moveInBatchArray[1]}/${SDATE} {} +
+				echo "moveInBatch (): move files from ${moveInBatchArray[0]} to ${moveInBatchArray[1]}/${SDATE}"
+			else
+				echo "moveInBatch (): no file to move in ${moveInBatchArray[0]}"
 			fi
+		else
+			echo "moveInBatch (): can not find ${moveInBatchArray[0]}"
 		fi
 	fi
 }
@@ -83,7 +90,11 @@ function compressInBatch () {
 			while [ $( find ${compressInBatchArray[1]} -maxdepth 2 -type f -mmin ${compressInBatchArray[3]} -printf '%h/%f\n' | wc -l ) -ne 0 ]; do
 				find ${compressInBatchArray[1]} -maxdepth 2 -type f -mmin ${compressInBatchArray[3]} -printf '%h/%f\n' | head -n ${LIMIT} | tar --remove-files -czvf ${compressInBatchArray[2]}/${SDATE}/tar_${SDATE}_${ITER}.tar.gz -T -
 				ITER=$((ITER+1))
+				
 			done
+			echo "compressInBatch (): compress files which are older than ${compressInBatchArray[3]} mins from ${compressInBatchArray[1]} to ${compressInBatchArray[2]}/${SDATE}"
+		else
+			echo "compressInBatch (): no file is older than ${compressInBatchArray[3]} mins from ${compressInBatchArray[1]}"
 		fi
 	fi
 }
@@ -92,9 +103,13 @@ function compressInBatch () {
 function removeInBatch () {
 	if [[ $# -ne 0 ]]; then
 		removeBatchArray=($@)
-		echo ${removeBatchArray[@]}
-		if [[ $(checkPath ${removeBatchArray[0]}) -ne 0 ]]; then
-			find ${removeBatchArray[0]} -type f -mmin ${removeBatchArray[1]} -delete
+		if [[ $( find ${removeBatchArray[0]} -maxdepth 2 -type f -mmin ${removeBatchArray[1]} -exec ls -lrt {} \; | wc -l ) -ne 0 ]]; then
+			while [ $( find ${removeBatchArray[0]} -maxdepth 2 -type f -mmin ${removeBatchArray[1]} -printf '%h/%f\n' | wc -l ) -ne 0 ]; do
+				find ${removeBatchArray[0]} -maxdepth 2 -type f -mmin ${removeBatchArray[1]} -printf '%h/%f\n' | head -n ${LIMIT} | xargs rm
+			done
+			echo "removeInBatch (): remove files which are older than ${removeBatchArray[1]} mins from ${removeBatchArray[0]}"
+		else
+			echo "removeInBatch (): no file is older than ${removeBatchArray[1]} mins from ${removeBatchArray[0]}"
 		fi
 	fi
 }

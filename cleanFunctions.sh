@@ -81,6 +81,7 @@ function moveInBatch () {
             if (( total_files_size <= backup_folder_free_space )); then
                 if [[ $( find ${moveInBatchArray[0]} -maxdepth 1 -type f -exec ls -lrt {} \; | wc -l ) -ne 0 ]]; then
                     find ${moveInBatchArray[0]} -maxdepth 1 -type f -exec mv -t ${moveInBatchArray[1]}/${SDATE} {} +
+					find "${moveInBatchArray[1]}/${SDATE}" -type f -exec touch {} +
                     echo "moveInBatch (): move files from ${moveInBatchArray[0]}  to ${moveInBatchArray[1]}/${SDATE}"
                     echo "moveInBatch (): from: mounted on \" $( df ${moveInBatchArray[0]} |tail -n -1 | awk '{print $6}') \" (- $(formatBytes $total_files_size) ), to: mounted on \" $( df ${moveInBatchArray[1]}/${SDATE} |tail -n -1 | awk '{print $6}') \" (+ $(formatBytes $total_files_size) )"
                 else

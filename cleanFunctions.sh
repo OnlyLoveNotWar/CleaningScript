@@ -1,5 +1,9 @@
+
+# Load the config file
 source ./cleanScriptCFG.cfg
+
 # -------------------- FUNCTIONS --------------------
+
 # The runFunArgArray function will trans the array to cmd(string) and run it with eval
 # Usage: runFunArgArray "${FUN_ARG_LIST[@]}"
 function runFunArgArray () {
@@ -16,6 +20,8 @@ function runFunArgArray () {
 		done
 }
 
+# The formatBytes function will trans the n Bytes to the ( xx GB xx MB xx KB xx B ) format
+# Usage: formatBytes() $bytes
 function formatBytes() {
     local bytes=$1
     local kb=1024
@@ -115,7 +121,6 @@ function compressInBatch () {
 				while [ $( find ${compressInBatchArray[1]} -maxdepth 2 -type f -mmin ${compressInBatchArray[3]} -printf '%h/%f\n' | wc -l ) -ne 0 ]; do
 					find ${compressInBatchArray[1]} -maxdepth 2 -type f -mmin ${compressInBatchArray[3]} -printf '%h/%f\n' | head -n ${LIMIT} | tar --remove-files -czvf ${compressInBatchArray[2]}/${SDATE}/tar_${SDATE}_${ITER}.tar.gz -T -
 					ITER=$((ITER+1))
-					
 				done
 				total_tar_gz_size=$(find ${compressInBatchArray[2]}/${SDATE} -type f -name '*.tar.gz' -exec du -cb {} + | tail -n 1 | awk '{print $1}')
 				echo "compressInBatch (): compress files which are older than ${compressInBatchArray[3]} mins from ${compressInBatchArray[1]} to ${compressInBatchArray[2]}/${SDATE}"
@@ -123,7 +128,6 @@ function compressInBatch () {
 			else
 				echo "compressInBatch (): not enough space in the GZ folder ${compressInBatchArray[2]}"
 			fi
-
 		else
 			echo "compressInBatch (): no file is older than ${compressInBatchArray[3]} mins from ${compressInBatchArray[1]}"
 		fi
@@ -162,13 +166,17 @@ function checkError () {
 	if [[ $# -ne 0 ]]; then
 		checkErrorArray=($@)
 		for (( i=0; i < ${#checkErrorArray[@]}; )); do
+			#check if the path exists
 			if [[ $(checkPath ${checkErrorArray[i]}) -ne 0 ]]; then
 				local tempUsage=$( df ${checkErrorArray[i]} |tail -n -1 | awk '{print $5}'|sed 's/.$//' )
+				# Check usage with lower threshold
 				if [ $tempUsage -gt ${checkErrorArray[${i+1}]} ]; then
+					# Check usage with upper threshold
 					if  [ $tempUsage -lt ${checkErrorArray[${i+2}]} ]; then
 						eval tmparr=\( \${${checkErrorArray[${i+3}]}[@]} \)
 						for j in ${tmparr[@]}; do
 							eval clearArr=\( \${${j}[@]} \)
+							# Check the input is for backup and compress or only remove
 							if [[ ${#clearArr[@]} -ne 2 ]]; then
 								moveInBatch ${clearArr[@]}
 								if [[ $(checkPath ${clearArr[1]}) -ne 0 && $(checkPath ${clearArr[2]}) -ne 0 ]]; then
@@ -177,7 +185,6 @@ function checkError () {
 							else
 								removeInBatch ${clearArr[@]}
 							fi
-
 						done
 					else
 						echo "Warning: the disk usage is $tempUsage% (Upper threshold:${checkErrorArray[${i+2}]}%), Plz check it manually!!!"

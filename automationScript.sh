@@ -12,33 +12,27 @@
 
 # Load the config file from the current directory
 source ./cleanScriptCFG.cfg
+# Load the functions file from the current directory
 source ./cleanFunctions.sh
 
 
 # -------------------- CALL --------------------
 if (( $LOG_SWITCH == 1 )); then
-    # Use a subshell instead of process substitution
+    # run subshell with timeStamp and log
     (
-        # Load in the source configurations
-        # include ./automationSource.sh
-        # Execution of compiled script
 
-        # show the current time when we run the script
         echo "------------------START--------------------------"
         runFunArgArray "${FUN_ARG_LIST[@]}"
         echo "------------------END--------------------------"
 
     ) | addTimeStamp | tee -a "${LOG_PATH}"
 else
+    # run subshell only timeStamp
 	(
-        # Load in the source configurations
-        # include ./automationSource.sh
-        # Execution of compiled script
-
-        # show the current time when we run the script
 
         echo "------------------START--------------------------"
         runFunArgArray "${FUN_ARG_LIST[@]}"
         echo "------------------END--------------------------"
+
 	) | addTimeStamp
 fi
